@@ -41,7 +41,7 @@ public class DemoteCommand implements CommandExecutor {
 
             String oldPrimary = user.getPrimaryGroup();
 
-            user.data().clear(InheritanceNode.builder(oldPrimary).build());
+            targetUser.data().remove(InheritanceNode.builder(oldPrimary).build());
             user.data().add(InheritanceNode.builder(rank).build());
 
             lp.getUserManager().saveUser(user);
