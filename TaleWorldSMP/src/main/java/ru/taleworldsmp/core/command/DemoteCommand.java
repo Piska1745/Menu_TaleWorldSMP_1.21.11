@@ -10,15 +10,14 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.java.JavaPlugin;
 
 public class DemoteCommand implements CommandExecutor {
 
-    private final String defaultRank;
-    private final String supportEmail;
+    private final JavaPlugin plugin;
 
-    public DemoteCommand(String defaultRank, String supportEmail) {
-        this.defaultRank = defaultRank;
-        this.supportEmail = supportEmail;
+    public DemoteCommand(JavaPlugin plugin) {
+        this.plugin = plugin;
     }
 
     @Override
@@ -33,71 +32,79 @@ public class DemoteCommand implements CommandExecutor {
         Player target = Bukkit.getPlayerExact(args[0]);
 
         if (target == null) {
-            sender.sendMessage(ChatColor.RED +
-                    "Игрок должен находиться онлайн.");
+            sender.sendMessage(ChatColor.RED + "Игрок не найден.");
             return true;
         }
 
-        String newRank = args[1];
+        String rank = args[1].toLowerCase();
 
-        StringBuilder reasonBuilder = new StringBuilder();
-
-        for (int i = 2; i < args.length; i++) {
-            if (i > 2) {
-                reasonBuilder.append(" ");
-            }
-            reasonBuilder.append(args[i]);
-        }
-
-        String reason = reasonBuilder.toString();
-
-        LuckPerms luckPerms;
-
-        try {
-            luckPerms = LuckPermsProvider.get();
-        } catch (IllegalStateException e) {
-            sender.sendMessage(ChatColor.RED +
-                    "LuckPerms не найден.");
-            return true;
-        }
-
-        User targetUser = luckPerms.getUserManager().getUser(target.getUniqueId());
-
-        if (targetUser == null) {
-            sender.sendMessage(ChatColor.RED +
-                    "Не удалось получить данные LuckPerms игрока.");
-            return true;
-        }
-
-        String oldRank = targetUser.getPrimaryGroup();
-
-        // Удаляем старую основную группу.
-        if (oldRank != null && !oldRank.equalsIgnoreCase("default")) {
-            targetUser.data().remove(
-                    InheritanceNode.builder(oldRank).build()
-            );
-        }
-
-        // Устанавливаем новый ранг.
-        targetUser.data().add(
-                InheritanceNode.builder(newRank).build()
+        String reason = String.join(
+                " ",
+                java.util.Arrays.copyOfRange(args, 2, args.length)
         );
 
-        luckPerms.getUserManager().saveUser(targetUser);
+        try {
+            LuckPerms lp = LuckPermsProvider.get();
 
-        sender.sendMessage(ChatColor.GREEN +
-                "Игрок " + target.getName() +
-                " переведён на ранг " + newRank + ".");
+            User user = lp.getUserManager()
+                    .getUser(target.getUniqueId());
 
-        target.sendMessage("");
-        target.sendMessage(ChatColor.RED + "Вы были сняты с должности.");
-        target.sendMessage(ChatColor.GRAY + "Новый ранг: " + ChatColor.WHITE + newRank);
-        target.sendMessage(ChatColor.GRAY + "Причина: " + ChatColor.WHITE + reason);
-        target.sendMessage("");
-        target.sendMessage(ChatColor.GRAY +
-                "Если это ошибка, обратитесь в поддержку:");
-        target.sendMessage(ChatColor.GREEN + supportEmail);
-        target.sendMessage("");
+            if (user == null) {
+                sender.sendMessage(ChatColor.RED +
+                        "Данные LuckPerms ещё не загружены.");
+                return true;
+            }
+
+            String oldPrimary = user.getPrimaryGroup();
+
+            // Удаляем старый основной ранг.
+            if (oldPrimary != null
+                    && !oldPrimary.equalsIgnoreCase("default")) {
+
+                user.data().remove(
+                        InheritanceNode.builder(oldPrimary).build()
+                );
+            }
+
+            // Добавляем новый ранг.
+            user.data().add(
+                    InheritanceNode.builder(rank).build()
+            );
+
+            // Сохраняем изменения в LuckPerms.
+            lp.getUserManager().saveUser(user);
+
+            sender.sendMessage(ChatColor.GREEN +
+                    "Игрок " + target.getName()
+                    + " снят до ранга " + rank + ".");
+
+            String email = plugin.getConfig().getString(
+                    "demote.support-email",
+                    "taleworldsmp@gmail.com"
+            );
+
+            target.sendMessage("");
+            target.sendMessage(ChatColor.RED +
+                    "Вы были сняты с должности.");
+            target.sendMessage(ChatColor.GRAY +
+                    "Новый ранг: " + ChatColor.WHITE + rank);
+            target.sendMessage(ChatColor.GRAY +
+                    "Причина: " + ChatColor.WHITE + reason);
+            target.sendMessage("");
+            target.sendMessage(ChatColor.GRAY +
+                    "Если это ошибка, обратитесь в поддержку:");
+            target.sendMessage(ChatColor.GREEN + email);
+            target.sendMessage("");
+
+        } catch (IllegalStateException e) {
+
+            sender.sendMessage(ChatColor.RED +
+                    "LuckPerms не найден или ещё не готов.");
+        }
+
+        return true;
+    }
+}
 
         return true;
     }
