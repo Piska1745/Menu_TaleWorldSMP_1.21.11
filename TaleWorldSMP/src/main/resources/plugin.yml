@@ -1,0 +1,42 @@
+name: TaleWorldSMP
+version: 1.0.0
+main: ru.taleworldsmp.core.TaleWorldSMP
+api-version: '1.21'
+author: TaleWorldSMP
+description: Core plugin for TaleWorldSMP.
+
+softdepend:
+  - LuckPerms
+
+commands:
+  telix:
+    description: Управление Теликами
+    usage: /telix <add|remove|set> <игрок> <количество>
+    permission: taleworldsmp.currency.manage
+  coins:
+    description: Управление Монетами
+    usage: /coins <add|remove|set> <игрок> <количество>
+    permission: taleworldsmp.currency.manage
+  tokens:
+    description: Управление Токенами
+    usage: /tokens <add|remove|set> <игрок> <количество>
+    permission: taleworldsmp.currency.manage
+  demote:
+    description: Снять игрока до указанного ранга
+    usage: /demote <игрок> <ранг> <причина>
+    permission: taleworldsmp.demote
+  nick:
+    description: Установить отображаемый ник
+    usage: /nick <ник|reset>
+    permission: taleworldsmp.nick
+
+permissions:
+  taleworldsmp.currency.manage:
+    description: Управление Теликами, Монетами и Токенами
+    default: op
+  taleworldsmp.demote:
+    description: Снятие игроков
+    default: op
+  taleworldsmp.nick:
+    description: Использование команды /nick
+    default: op

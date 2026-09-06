@@ -1,0 +1,15 @@
+sidebar:
+  enabled: true
+  title: "§aTALE WORLD SMP"
+  separator: "§8────────────"
+  currency:
+    telix: "◈"
+    coins: "◈"
+    tokens: "◈"
+
+storage:
+  file: "players.yml"
+
+demote:
+  default-rank: "player"
+  support-email: "taleworldsmp@gmail.com"
